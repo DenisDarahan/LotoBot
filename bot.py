@@ -73,6 +73,7 @@ def get_amount_to_raise(message):
                          'Кажется, Вы ввели не число...\n'
                          'Укажите, пожалуйста, сумму пополнения снова:',
                          reply_markup=private_room_menu())
+
     else:
         msg = bot.send_message(message.chat.id,
                                'Принято!\n'
@@ -108,6 +109,33 @@ def check_raise_money_payment_message(call):
         bot.answer_callback_query(call.id, 'Успех!')
     else:
         bot.answer_callback_query(call.id, 'Оплата еще не прошла. Попробуйте проверить позже')
+
+
+@bot.message_handler(func=lambda message: message.text == '📤 Вывод средств' and
+                                          get_variables_stage(message.chat.id) == 'user')
+def start_raise_money(message):
+    msg = bot.send_message(message.chat.id,
+                           'Укажите, пожалуйста, сумму для вывода:',
+                           reply_markup=private_room_menu())
+    bot.register_next_step_handler(msg, get_amount_to_withdraw)
+
+
+def get_amount_to_withdraw(message):
+    result = get_float_from_message(message.text)
+    if result == 'exit':
+        bot.send_message(message.chat.id,
+                         '📰 <b>Главное меню</b>',
+                         parse_mode='HTML',
+                         reply_markup=start_menu())
+    elif result == 'not a number':
+        bot.send_message(message.chat.id,
+                         'Кажется, Вы ввели не число...\n'
+                         'Укажите, пожалуйста, сумму пополнения снова:',
+                         reply_markup=private_room_menu())
+    else:
+        real_amount = get_variables_amount(message.chat.id)
+        if real_amount < result:
+            pass
 
 
 
