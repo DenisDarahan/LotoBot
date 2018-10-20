@@ -62,29 +62,3 @@ def check_payment(user_id):
     else:
         return amount
 
-'''
-success_paym_msg = ('💳 Баланс успешно пополнен!\n\n'
-                        '+ {0:.2f} 💴 RUB\n'
-                        '+ {1:.2f} 💶 EUR')
-   
-                set_payment_success_in(call.message.chat.id,
-                                       amount,
-                                       'IN',
-                                       datetime.datetime.today().strftime('%Y.%m.%d %H:%M'))
-                bot.delete_message(call.message.chat.id,
-                                   call.message.message_id)
-                bot.send_message(call.message.chat.id,
-                                 success_paym_msg.format(in_capital,
-                                                         in_energy_user - bns))
-                l += float(amount)
-                break
-    except Exception as e:
-        print(e)
-    if not l:
-        bot.delete_message(call.message.chat.id,
-                           call.message.message_id)
-        bot.send_message(call.message.chat.id,
-                         'Упс! Похоже, деньги еще не зашли! Попробуйте еще раз немного позже :)',
-                         reply_markup=types.InlineKeyboardMarkup()
-                         .row(types.InlineKeyboardButton('Оплатил!', callback_data='payed')))
-'''
