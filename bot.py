@@ -1,4 +1,4 @@
-from LotoBot.config import TOKEN
+from LotoBot.config import TOKEN, admin_id
 from LotoBot.markups import *
 from LotoBot.db_manager import *
 from utils import *
@@ -31,10 +31,15 @@ def start_message(message):
 # ==============================================================
 # Admin Interface
 
-@bot.message_handler(commands=['admin'])
+@bot.message_handler(commands=['admin'], func=lambda message: message.chat.id == admin_id)
 def start_message(message):
+    set_variables_stage(admin_id, 'admin')
     bot.send_message(message.chat.id,
-                     'Добро пожаловать в админ-панель')
+                     '🏛 Добро пожаловать в админ-панель',
+                     reply_markup=start_admin_menu())
+
+
+
 
 
 

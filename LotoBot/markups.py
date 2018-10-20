@@ -17,3 +17,12 @@ def start_menu():
 
 # ==============================================================
 # Admin Interface
+
+def start_admin_menu():
+    markup = types.ReplyKeyboardMarkup()
+    markup.row(types.KeyboardButton('🎲 Розыгрыш'))
+    markup.row(types.KeyboardButton('📊 Статистика'))
+    markup.row(types.KeyboardButton('↩️ Вернуться в главное меню'))
+
+    return markup
+

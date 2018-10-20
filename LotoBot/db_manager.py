@@ -39,8 +39,8 @@ def get_variables_stage(user_id):
     return result
 
 
-def set_variables_stage(user_id):
+def set_variables_stage(user_id, stage):
     con, cur = create_con()
-    cur.execute('SELECT stage FROM variables WHERE user_id = ?', (user_id,))
+    cur.execute('UPDATE variables SET stage = ? WHERE user_id = ?', (stage, user_id))
     con.commit()
     close_con(con, cur)
