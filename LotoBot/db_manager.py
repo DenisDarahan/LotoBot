@@ -72,6 +72,14 @@ def update_spoof_prizes(prizes):
     close_con(con, cur)
 
 
+def update_spoof_participants():
+    con, cur = create_con()
+    result = cur.execute('SELECT participants FROM spoof').fetchall()[0][0]
+    cur.execute('UPDATE spoof SET participants = ?', (result + 1,))
+    con.commit()
+    close_con(con, cur)
+
+
 def clear_spoof():
     con, cur = create_con()
     cur.execute('UPDATE spoof SET active = 0, price = 0, prizes = "", participants = 0')

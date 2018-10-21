@@ -97,12 +97,13 @@ def withdraw_money_from_account(amount, qiwi_acc):
 
 
 def convert_info_to_string(pattern, info_list):
-    number_winners = len(info_list[0])
+    number_winners = len(info_list[-1])
     prizes_string = ''
     if number_winners == 1:
         prizes_string = pattern.format(*[j[0] for j in info_list])
         return prizes_string
     else:
+        print(number_winners)
         for i in range(number_winners):
             prizes_string += str(i + 1) + ') ' + pattern.format(*[j[i] for j in info_list])
         return prizes_string
@@ -151,6 +152,7 @@ def get_spoof_info_for_message(mode):
                 winners = get_winners(len(prizes))
             except:
                 clear_spoof()
+                clear_variables_cur_activity()
                 return ['Победители не определены, так как нет участников']
             else:
                 pattern = '{} <a href="tg://user?id={}">{}</a> {} руб\n'
@@ -159,7 +161,7 @@ def get_spoof_info_for_message(mode):
                 real_prizes = [int(i * bank / 100) for i in prizes]
                 winners_string = convert_info_to_string(pattern, [l, winners, winners_by_name, real_prizes])
                 end_spoof(winners, real_prizes, bank, profit)
-                return winners_string
+                return [winners_string]
         else:
             raise IndexError
 
@@ -178,3 +180,4 @@ def end_spoof(winners, real_prizes, bank, profit):
         update_variables_amount(winners[i], real_prizes[i])
     update_statistics_end_spoof(bank, bank * profit / 100)
     clear_spoof()
+    clear_variables_cur_activity()

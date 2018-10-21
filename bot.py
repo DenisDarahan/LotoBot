@@ -16,7 +16,9 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
 def start_user_message(message):
-    create_user(message.chat.id, message.chat.first_name)
+    if not get_user_first_name(message.chat.id):
+        create_user(message.chat.id, message.chat.first_name)
+    update_variables_stage(message.chat.id, 'user')
     bot.send_message(message.chat.id,
                      '💰 Добро пожаловать в LotoBot! 💰\n'
                      'Это бот-лотерея 🎰\n'
@@ -228,6 +230,53 @@ def check_save_qiwi_acc_message(call):
             bot.answer_callback_query(call.id, text='Ошибка!')
 
 
+@bot.message_handler(func=lambda message: message.text == '🎲 Розыгрыши' and
+                                          get_variables_stage(message.chat.id) == 'user')
+def check_spoof_user_message(message):
+    if get_spoof_active() and get_variables_cur_activity(message.chat.id) == 0:
+        bot.send_message(message.chat.id,
+                         '🎲🎲 <b>Розыгрыш №{}</b> 🎲🎲\n\n'
+                         'Стоимость участия: {} руб\n'
+                         '💰 ДЖЕКПОТ - {}% ОТ <b>ВСЕГО</b> ПРИЗОВОГО ФОНДА'.format(*get_spoof_info_for_message(4)),
+                         parse_mode='HTML',
+                         reply_markup=get_started_spoof_menu())
+    elif get_variables_cur_activity(message.chat.id):
+        bot.send_message(message.chat.id,
+                         'Вы уже участвуете в текущем розыгрыше! 😊\n\n'
+                         '🎲🎲 <b>Розыгрыш №{}</b> 🎲🎲\n\n'
+                         'Стоимость участия: {} руб\n'
+                         '💰 ДЖЕКПОТ - {}% ОТ <b>ВСЕГО</b> ПРИЗОВОГО ФОНДА'.format(*get_spoof_info_for_message(4)),
+                         parse_mode='HTML',
+                         reply_markup=start_menu())
+    else:
+        bot.send_message(message.chat.id,
+                         'К сожалению, на данный момент активных розыгрышей нет 😢',
+                         reply_markup=start_menu())
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'get_started')
+def get_started_spoof_user_message(call):
+    price = get_spoof_price()
+    amount = get_variables_amount(call.message.chat.id)
+    print(price, amount)
+    if price <= amount:
+        update_variables_cur_activity(call.message.chat.id, 1)
+        real_amount = update_variables_amount(call.message.chat.id, -price)
+        update_spoof_participants()
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.send_message(call.message.chat.id,
+                         'Вы учавствуете в розыгрыше! 🤑\n'
+                         'С Вашего счета было списано {} руб\n'
+                         'Остаток на счету: {} руб'.format(price, real_amount),
+                         reply_markup=start_menu())
+        bot.answer_callback_query(call.id, text='Успех!')
+    else:
+        bot.send_message(call.message.chat.id,
+                         'К сожалению, на Вашем счету не достаточно средств 😢\n'
+                         'Вы можете пополнить счет в 🏡 Личном кабинете',
+                         reply_markup=start_menu())
+        bot.answer_callback_query(call.id, text='Недостаточно средств на счету')
+
 
 
 # ==============================================================
@@ -377,12 +426,12 @@ def end_spoof_admin_message(message):
                      '⌛️ Розыгрыш завершен!',
                      reply_markup=start_admin_menu())
     # TODO: send spam
-    #bot.send_message(admin_id,
-    #                 '<b>Розыгрыш завершен!</b>\n\n'
-    #                 '🍾 Победители:\n'
-    #                 '{}'.format(*get_spoof_info_for_message(3)),
-    #                 parse_mode='HTML',
-    #                 reply_markup=start_admin_menu())
+    bot.send_message(admin_id,
+                     '<b>Розыгрыш завершен!</b>\n\n'
+                     '🍾 Победители:\n'
+                     '{}'.format(*get_spoof_info_for_message(3)),
+                     parse_mode='HTML',
+                     reply_markup=start_admin_menu())
 
 
 

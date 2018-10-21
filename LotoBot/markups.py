@@ -57,6 +57,13 @@ def check_save_qiwi_acc_menu(amount, qiwi_acc):
     return markup
 
 
+def get_started_spoof_menu():
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton('➡️ Участвовать! ⬅️', callback_data='get_started'))
+
+    return markup
+
+
 
 
 # ==============================================================
