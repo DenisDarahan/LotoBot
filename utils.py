@@ -147,14 +147,19 @@ def get_spoof_info_for_message(mode):
 
         # Admin Interface -> Розыгрыш -> Завершить розыгрыш
         elif mode == 3:
-            winners = get_winners(len(prizes))
-            pattern = '{} <a href="tg://user?id={}">{}</a> {} руб\n'
-            l = ['🥇', '🥈', '🥉', *['🎗' for _ in range(len(prizes) - 3)]]
-            winners_by_name = [get_user_first_name(i) for i in winners]
-            real_prizes = [int(i * bank / 100) for i in prizes]
-            winners_string = convert_info_to_string(pattern, [l, winners, winners_by_name, real_prizes])
-            return winners_string
-
+            try:
+                winners = get_winners(len(prizes))
+            except:
+                clear_spoof()
+                return ['Победители не определены, так как нет участников']
+            else:
+                pattern = '{} <a href="tg://user?id={}">{}</a> {} руб\n'
+                l = ['🥇', '🥈', '🥉', *['🎗' for _ in range(len(prizes) - 3)]]
+                winners_by_name = [get_user_first_name(i) for i in winners]
+                real_prizes = [int(i * bank / 100) for i in prizes]
+                winners_string = convert_info_to_string(pattern, [l, winners, winners_by_name, real_prizes])
+                end_spoof(winners, real_prizes, bank, profit)
+                return winners_string
         else:
             raise IndexError
 
@@ -166,3 +171,10 @@ def get_prizes_list_from_message(text):
         raise ValueError
     else:
         return text
+
+
+def end_spoof(winners, real_prizes, bank, profit):
+    for i in range(len(winners)):
+        update_variables_amount(winners[i], real_prizes[i])
+    update_statistics_end_spoof(bank, bank * profit / 100)
+    clear_spoof()

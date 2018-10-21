@@ -72,6 +72,13 @@ def update_spoof_prizes(prizes):
     close_con(con, cur)
 
 
+def clear_spoof():
+    con, cur = create_con()
+    cur.execute('UPDATE spoof SET active = 0, price = 0, prizes = "", participants = 0')
+    con.commit()
+    close_con(con, cur)
+
+
 
 # ==============================================================
 # statistic
@@ -106,6 +113,14 @@ def get_statistics_bank():
     close_con(con, cur)
 
     return result
+
+
+def update_statistics_end_spoof(bank, profit):
+    con, cur = create_con()
+    result = cur.execute('SELECT bank, admin_bank FROM statistics').fetchall()[0]
+    cur.execute('UPDATE statistics SET bank = ?, admin_bank = ?', (result[0] + bank, result[1] + profit))
+    con.commit()
+    close_con(con, cur)
 
 
 

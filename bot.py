@@ -268,7 +268,7 @@ def get_statistics_admin_message(message):
 def create_spoof_admin_message(message):
     if get_spoof_active():
         bot.send_message(admin_id,
-                         '🎲🎲 Розыгрыш №{} 🎲🎲\n\n'
+                         '🎲🎲 <b>Розыгрыш №{}</b> 🎲🎲\n\n'
                          '👨‍👩‍👧‍👦 Количество участников: {}\n'
                          '💰 Банк: {} руб\n'
                          '💸 Заработок: {} руб ({}%)\n'
@@ -326,7 +326,7 @@ def get_prizes_spoof_message(message):
         bot.send_message(message.chat.id,
                          'Отлично! Розыгрыш готов!\n'
                          'Вот информация о нем:\n\n'
-                         '🎲🎲 Розыгрыш №{} 🎲🎲\n\n'
+                         '🎲🎲 <b>Розыгрыш №{}</b> 🎲🎲\n\n'
                          '💸 Заработок: {}%\n'
                          '💵 Стоимость участия: {} руб\n\n'
                          '🏆 Призы:\n'
@@ -345,11 +345,14 @@ def start_spoof_admin_message(message):
                      '⏳ Розыгрыш запущен!',
                      reply_markup=start_admin_menu())
     # TODO: send spam
+    #bot.send_message(
+    #                 '<b>Запущен розыгрыш</b>',
+    #                 parse_mode='HTML')
 
 
 @bot.message_handler(func=lambda message: message.text == '❌ Отмена' and
                                           get_variables_stage(message.chat.id) == 'admin')
-def start_spoof_admin_message(message):
+def cancel_spoof_admin_message(message):
     update_spoof_active(0)
     update_spoof_price(0)
     update_spoof_prizes('')
@@ -360,11 +363,26 @@ def start_spoof_admin_message(message):
 
 @bot.message_handler(func=lambda message: message.text == '↩️ Назад' and
                                           get_variables_stage(message.chat.id) == 'admin')
-def start_spoof_admin_message(message):
+def get_back_to_admin_message(message):
     bot.send_message(admin_id,
                      '🏛 <b>Админ-панель</b>',
                      parse_mode='HTML',
                      reply_markup=start_admin_menu())
+
+
+@bot.message_handler(func=lambda message: message.text == '🏁 Завершить розыгрыш' and
+                                          get_variables_stage(message.chat.id) == 'admin')
+def end_spoof_admin_message(message):
+    bot.send_message(admin_id,
+                     '⌛️ Розыгрыш завершен!',
+                     reply_markup=start_admin_menu())
+    # TODO: send spam
+    #bot.send_message(admin_id,
+    #                 '<b>Розыгрыш завершен!</b>\n\n'
+    #                 '🍾 Победители:\n'
+    #                 '{}'.format(*get_spoof_info_for_message(3)),
+    #                 parse_mode='HTML',
+    #                 reply_markup=start_admin_menu())
 
 
 
