@@ -50,7 +50,16 @@ def get_user_qiwi_acc(user_id):
 def update_user_qiwi_acc(user_id, qiwi_acc):
     con, cur = create_con()
     result = cur.execute('SELECT qiwi_acc FROM user WHERE user_id = ?', (user_id,)).fetchall()[0][0]
-    cur.execute('UPDATE user SET qiwi_acc = ? WHERE user_id = ?', (result + qiwi_acc + ' ', user_id))
+    if qiwi_acc not in result:
+        cur.execute('UPDATE user SET qiwi_acc = ? WHERE user_id = ?', (result + qiwi_acc + ' ', user_id))
+        con.commit()
+    close_con(con, cur)
+
+
+def delete_user_qiwi_acc(user_id, qiwi_acc):
+    con, cur = create_con()
+    result = cur.execute('SELECT qiwi_acc FROM user WHERE user_id = ?', (user_id,)).fetchall()[0][0]
+    cur.execute('UPDATE user SET qiwi_acc = ? WHERE user_id = ?', (result.replace(qiwi_acc + ' ', ''), user_id))
     con.commit()
     close_con(con, cur)
 

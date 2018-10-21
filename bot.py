@@ -82,12 +82,12 @@ def get_amount_to_raise(message):
                                '<i>Будьте внимательны - изменять комментарий к оплате НЕЛЬЗЯ!\n'
                                'В противном случае Вы рискуете потерять Ваши деньги!</i>'.format(*result),
                                parse_mode='HTML',
-                               reply_markup=raise_money_account(message.chat.id, *result))
+                               reply_markup=raise_money_account_menu(message.chat.id, *result))
         time.sleep(3)
         bot.send_message(message.chat.id,
                          'После отправки платежа, пожалуйста, нажмите кнопку ниже ⬇️\n'
                          'Она проверит, прошла ли оплата',
-                         reply_markup=check_raise_money_account(msg.message_id))
+                         reply_markup=check_raise_money_account_menu(msg.message_id))
 
 
 @bot.callback_query_handler(func=lambda call: call.data[:12] == 'check_money_')
@@ -134,6 +134,7 @@ def get_amount_to_withdraw(message):
         bot.register_next_step_handler(msg, get_amount_to_withdraw)
     else:
         real_amount = get_variables_amount(message.chat.id)
+        amount = float('{}.{}'.format(*amount))
         if real_amount < amount:
             msg = bot.send_message(message.chat.id,
                                    'Введенная Вами сумма превышает сумму на счету...\n'
@@ -142,35 +143,84 @@ def get_amount_to_withdraw(message):
                                    reply_markup=private_room_menu())
             bot.register_next_step_handler(msg, get_amount_to_withdraw)
         else:
-            if get_qiwi_acc(message.chat.id):
-                # TODO: add InlineKeyBoard with available accounts
-                pass
+            qiwi_acc = get_user_qiwi_acc(message.chat.id).split()
+            if qiwi_acc:
+                bot.send_message(message.chat.id,
+                                 'Выберите нужный кошелёк или укажите новый:',
+                                 reply_markup=create_qiwi_acc_menu(amount, qiwi_acc))
             else:
                 msg = bot.send_message(message.chat.id,
                                        'У Вас ещё нет сохраненных кошельков 😱\n'
-                                       'Укажите, пожалуйста, номер кошелька, на который я могу отправить Ваши деньги:\n'
-                                       '<i>Будьте внимательны: вводите номер в виде +70001111111</i>',
+                                       'Укажите, пожалуйста, номер кошелька, на который я могу отправить Ваши деньги 💸\n'
+                                       '\n<i>Будьте внимательны: вводите номер в виде +70001111111</i>',
                                        parse_mode='HTML',
                                        reply_markup=private_room_menu())
                 bot.register_next_step_handler(msg, get_qiwi_acc_message, amount)
 
 
 def get_qiwi_acc_message(message, amount):
-    result = get_integer_from_message(message.text)  # TODO: change this func with func for getting numbers!
-    if result == 'exit':
+    qiwi_acc = get_qiwi_acc_from_message(message.text)
+    if qiwi_acc == 'exit':
         bot.send_message(message.chat.id,
                          '📰 <b>Главное меню</b>',
                          parse_mode='HTML',
                          reply_markup=start_menu())
-    elif result == 'not a number':
+    elif qiwi_acc == 'not a number':
         msg = bot.send_message(message.chat.id,
                                'Кажется, Вы ввели номер кошелька неверно...\n'
                                'Укажите, пожалуйста, номер снова:',
                                reply_markup=private_room_menu())
         bot.register_next_step_handler(msg, get_qiwi_acc_message, amount)
     else:
-        result = '+' + str(result)
-        # TODO: create InlineKeyBoard to have possibility to save added qiwi_acc
+        bot.send_message(message.chat.id,
+                         'Сохранить этот кошелёк?',
+                         reply_markup=check_save_qiwi_acc_menu(amount, qiwi_acc))
+
+
+@bot.callback_query_handler(func=lambda call: call.data[4:14] == '_qiwi_acc_')
+def check_save_qiwi_acc_message(call):
+    answer = call.data.split('_')  # answer = [mode, 'qiwi', 'acc', amount, qiwi_acc]
+    if answer[0] == 'delt':
+        delete_user_qiwi_acc(call.message.chat.id, answer[-1])
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.send_message(call.message.chat.id,
+                         'Выберите нужный кошелёк или укажите новый:',
+                         reply_markup=create_qiwi_acc_menu(float(answer[-2]), answer[-1]))
+        bot.answer_callback_query(call.id, text=None)
+    elif answer[-1] == '+0':
+        msg = bot.send_message(call.message.chat.id,
+                               'Укажите, пожалуйста, номер кошелька, на который я могу отправить Ваши деньги 💸\n'
+                               '\n<i>Будьте внимательны: вводите номер в виде +70001111111</i>',
+                               parse_mode='HTML',
+                               reply_markup=private_room_menu())
+        bot.register_next_step_handler(msg, get_qiwi_acc_message, float(answer[-2]))
+        bot.answer_callback_query(call.id, text=None)
+    else:
+        if answer[0] == 'save':
+            update_user_qiwi_acc(call.message.chat.id, answer[-1])
+            bot.answer_callback_query(call.id, text='Сохранено!')
+        else:
+            bot.answer_callback_query(call.id, text=None)
+        result = withdraw_money_from_account(answer[-2], answer[-1])
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        if result == True:
+            real_amount = update_variables_amount(call.message.chat.id, -float(answer[-2]))
+            bot.send_message(admin_id,
+                             '<b>Вывод!</b>\n'
+                             'ID: {}\n'
+                             'Sum: {} руб'.format(call.message.chat.id, answer[-2]),
+                             parse_mode='HTML')
+            bot.send_message(call.message.chat.id,
+                             'Готово!\n'
+                             'Деньги были перечислены на Ваш кошелёк!😍💰\n\n'
+                             '✅ Перечислено: {} руб\n'
+                             '💳 Ваш текущий баланс: {} руб'.format(answer[-2], real_amount),
+                             reply_markup=private_room_menu())
+        else:
+            bot.send_message(call.message.chat.id,
+                             'Ошибка транзакции!\n'
+                             '{}'.format(result),
+                             reply_markup=private_room_menu())
 
 
 

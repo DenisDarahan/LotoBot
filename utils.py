@@ -1,8 +1,10 @@
+import re
 import time
 import hashlib
 import requests
+import json
 
-from LotoBot.config import PAY_LINK, url_get_history_payed, headers
+from LotoBot.config import PAY_LINK, url, url_get_history_payed, headers
 from LotoBot.db_manager import *
 
 
@@ -11,7 +13,7 @@ def get_number_from_message(func):
     def wrapper(text):
         try:
             result = func(text)
-        except ValueError:
+        except:
             if text in ['↩️ Назад', '❌ Отмена']:
                 result = 'exit'
             else:
@@ -63,53 +65,29 @@ def check_payment(user_id):
         return amount
 
 
-def get_qiwi_acc(user_id):
-    qiwi_acc = get_user_qiwi_acc(user_id).split()
-    if qiwi_acc == []:
-        return None
+@get_number_from_message
+def get_qiwi_acc_from_message(text):
+    if len(text) == 12:
+        qiwi_acc = re.match('^\+\d\d\d\d\d\d\d\d\d\d\d', text).group()
     else:
-        return qiwi_acc
-'''
+        qiwi_acc = re.match('^\+\d\d\d\d\d\d\d\d\d\d\d\d', text).group()
+
+    return qiwi_acc
+
+
+def withdraw_money_from_account(amount, qiwi_acc):
+    data = '{"id":"1","sum":{"amount":"def","currency":"643"},' \
+           '"paymentMethod":{"type":"Account","accountId":"643"},' \
+           '"comment":"def","fields":{"account":"def"}}'
+    js = json.loads(data)
+    js["id"] = str(int(time.time()) * 1000)
+    js['sum']['amount'] = str(amount)
+    js['comment'] = 'Вывод средств'
+    js['fields']['account'] = qiwi_acc
+    data = json.dumps(js)
+    r = requests.post(url=url, data=data, headers=headers)
     try:
-        if len(message.text) == 12:
-            phone = re.match('^\+\d\d\d\d\d\d\d\d\d\d\d', message.text).group()
-        else:
-            phone = re.match('^\+\d\d\d\d\d\d\d\d\d\d\d\d', message.text).group()
-        set_user_stage(message.chat.id, '')
-        money = int(get_user_cache(message.chat.id))
-        cash_out = money / 10
-        energy_out = money / 100
-        data = '{"id":"1","sum":{"amount":"def","currency":"643"},' \
-               '"paymentMethod":{"type":"Account","accountId":"643"},' \
-               '"comment":"def","fields":{"account":"def"}}'
-        js = json.loads(data)
-        js["id"] = str(int(time.time()) * 1000)
-        js['sum']['amount'] = str(cash_out)
-        js['comment'] = 'Вывод средств'
-        js['fields']['account'] = '+' + phone
-        data = json.dumps(js)
-        r = requests.post(url=url, data=data, headers=headers)
-        create_payment(message.chat.id, 'Вывод средств', 'OUT', phone)
-        try:
-            if r.json()['transaction']['state']['code'] == 'Accepted':
-                set_payment_success_out(message.chat.id, cash_out, 'OUT',
-                                    datetime.datetime.today().strftime('%Y.%m.%d %H:%M'),
-                                    money, energy_out)
-                bot.send_message(383053151,
-                                 'Вывод!\n'
-                                 'ID: {0}\n'
-                                 'Sum: {1}'.format(message.chat.id,
-                                                   cash_out))
-                bot.send_message(message.chat.id,
-                                 'Поздравляем!\n'
-                                 'Вы вывели свои заработанные деньги 😍💰\n\n'
-                                 '✅ Перечислено: {0} руб\n\n'
-                                 'Ждём тебя за следующим выводом😉'.format(cash_out),
-                                 reply_markup=main_menu())
-        except KeyError:
-            bot.send_message(message.chat.id,
-                             'Ошибка транзакции! {0}'.format(r.json()['message']))
-    except AttributeError:
-        bot.send_message(message.chat.id,
-                         'Пожалуйста, введите номер формата +70001111111')                     
-'''
+        if r.json()['transaction']['state']['code'] == 'Accepted':
+            return True
+    except KeyError:
+        return r.json()['message']
