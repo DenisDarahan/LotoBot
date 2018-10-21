@@ -1,6 +1,5 @@
 from LotoBot.config import TOKEN, admin_id
 from LotoBot.markups import *
-from LotoBot.db_manager import *
 from utils import *
 
 import telebot
@@ -69,11 +68,11 @@ def get_amount_to_raise(message):
                          parse_mode='HTML',
                          reply_markup=start_menu())
     elif result == 'not a number':
-        bot.send_message(message.chat.id,
-                         'Кажется, Вы ввели не число...\n'
-                         'Укажите, пожалуйста, сумму пополнения снова:',
-                         reply_markup=private_room_menu())
-
+        msg = bot.send_message(message.chat.id,
+                               'Кажется, Вы ввели не число...\n'
+                               'Укажите, пожалуйста, сумму пополнения снова:',
+                               reply_markup=private_room_menu())
+        bot.register_next_step_handler(msg, get_amount_to_raise)
     else:
         msg = bot.send_message(message.chat.id,
                                'Принято!\n'
@@ -121,21 +120,57 @@ def start_raise_money(message):
 
 
 def get_amount_to_withdraw(message):
-    result = get_float_from_message(message.text)
+    amount = get_float_from_message(message.text)
+    if amount == 'exit':
+        bot.send_message(message.chat.id,
+                         '📰 <b>Главное меню</b>',
+                         parse_mode='HTML',
+                         reply_markup=start_menu())
+    elif amount == 'not a number':
+        msg = bot.send_message(message.chat.id,
+                               'Кажется, Вы ввели не число...\n'
+                               'Укажите, пожалуйста, сумму пополнения снова:',
+                               reply_markup=private_room_menu())
+        bot.register_next_step_handler(msg, get_amount_to_withdraw)
+    else:
+        real_amount = get_variables_amount(message.chat.id)
+        if real_amount < amount:
+            msg = bot.send_message(message.chat.id,
+                                   'Введенная Вами сумма превышает сумму на счету...\n'
+                                   'Баланс на Вашем счету: {} руб\n'
+                                   'Укажите, пожалуйста, сумму пополнения снова:'.format(real_amount),
+                                   reply_markup=private_room_menu())
+            bot.register_next_step_handler(msg, get_amount_to_withdraw)
+        else:
+            if get_qiwi_acc(message.chat.id):
+                # TODO: add InlineKeyBoard with available accounts
+                pass
+            else:
+                msg = bot.send_message(message.chat.id,
+                                       'У Вас ещё нет сохраненных кошельков 😱\n'
+                                       'Укажите, пожалуйста, номер кошелька, на который я могу отправить Ваши деньги:\n'
+                                       '<i>Будьте внимательны: вводите номер в виде +70001111111</i>',
+                                       parse_mode='HTML',
+                                       reply_markup=private_room_menu())
+                bot.register_next_step_handler(msg, get_qiwi_acc_message, amount)
+
+
+def get_qiwi_acc_message(message, amount):
+    result = get_integer_from_message(message.text)  # TODO: change this func with func for getting numbers!
     if result == 'exit':
         bot.send_message(message.chat.id,
                          '📰 <b>Главное меню</b>',
                          parse_mode='HTML',
                          reply_markup=start_menu())
     elif result == 'not a number':
-        bot.send_message(message.chat.id,
-                         'Кажется, Вы ввели не число...\n'
-                         'Укажите, пожалуйста, сумму пополнения снова:',
-                         reply_markup=private_room_menu())
+        msg = bot.send_message(message.chat.id,
+                               'Кажется, Вы ввели номер кошелька неверно...\n'
+                               'Укажите, пожалуйста, номер снова:',
+                               reply_markup=private_room_menu())
+        bot.register_next_step_handler(msg, get_qiwi_acc_message, amount)
     else:
-        real_amount = get_variables_amount(message.chat.id)
-        if real_amount < result:
-            pass
+        result = '+' + str(result)
+        # TODO: create InlineKeyBoard to have possibility to save added qiwi_acc
 
 
 

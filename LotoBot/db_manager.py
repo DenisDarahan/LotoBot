@@ -39,6 +39,21 @@ def create_user(user_id, first_name):
     close_con(con, cur)
 
 
+def get_user_qiwi_acc(user_id):
+    con, cur = create_con()
+    result = cur.execute('SELECT qiwi_acc FROM user WHERE user_id = ?', (user_id,)).fetchall()[0][0]
+    close_con(con, cur)
+
+    return result
+
+
+def update_user_qiwi_acc(user_id, qiwi_acc):
+    con, cur = create_con()
+    result = cur.execute('SELECT qiwi_acc FROM user WHERE user_id = ?', (user_id,)).fetchall()[0][0]
+    cur.execute('UPDATE user SET qiwi_acc = ? WHERE user_id = ?', (result + qiwi_acc + ' ', user_id))
+    con.commit()
+    close_con(con, cur)
+
 
 
 # ==============================================================
