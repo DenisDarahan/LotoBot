@@ -34,7 +34,7 @@ def raise_money_account_menu(user_id, rubles, kopeck):
 
 def check_raise_money_account_menu(msg_id):
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton('🔄 Обновить информацию', callback_data='check_money_' + str(msg_id)))
+    markup.add(types.InlineKeyboardButton('🔄 Обновить информацию об оплате', callback_data='check_money_' + str(msg_id)))
 
     return markup
 
@@ -70,3 +70,25 @@ def start_admin_menu():
 
     return markup
 
+
+def start_spoof_admin_menu():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row(types.KeyboardButton('🏁 Завершить розыгрыш'))
+    markup.row(types.KeyboardButton('↩️ Назад'))
+
+    return markup
+
+
+def cancel_spoof_admin_menu():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row(types.KeyboardButton('❌ Отмена'))
+
+    return markup
+
+
+def decide_start_spoof_admin_menu():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row(types.KeyboardButton('🚀 Начать розыгрыш'))
+    markup.row(types.KeyboardButton('❌ Отмена'))
+
+    return markup

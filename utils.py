@@ -3,6 +3,7 @@ import time
 import hashlib
 import requests
 import json
+from random import choice
 
 from LotoBot.config import PAY_LINK, url, url_get_history_payed, headers
 from LotoBot.db_manager import *
@@ -76,9 +77,9 @@ def get_qiwi_acc_from_message(text):
 
 
 def withdraw_money_from_account(amount, qiwi_acc):
-    data = '{"id":"1","sum":{"amount":"def","currency":"643"},' \
-           '"paymentMethod":{"type":"Account","accountId":"643"},' \
-           '"comment":"def","fields":{"account":"def"}}'
+    data = ('{"id":"1","sum":{"amount":"def","currency":"643"},'
+            '"paymentMethod":{"type":"Account","accountId":"643"},'
+            '"comment":"def","fields":{"account":"def"}}')
     js = json.loads(data)
     js["id"] = str(int(time.time()) * 1000)
     js['sum']['amount'] = str(amount)
@@ -91,3 +92,77 @@ def withdraw_money_from_account(amount, qiwi_acc):
             return True
     except KeyError:
         return r.json()['message']
+
+    return None
+
+
+def convert_info_to_string(pattern, info_list):
+    number_winners = len(info_list[0])
+    prizes_string = ''
+    if number_winners == 1:
+        prizes_string = pattern.format(*[j[0] for j in info_list])
+        return prizes_string
+    else:
+        for i in range(number_winners):
+            prizes_string += str(i + 1) + ') ' + pattern.format(*[j[i] for j in info_list])
+        return prizes_string
+
+
+def get_winners(number_winners):
+    winners = []
+    possible_winners = [i[0] for i in get_variables_users_by_cur_activity(1)]
+    for i in range(number_winners):
+        winner = choice(possible_winners)
+        winners.append(winner)
+        possible_winners.remove(winner)
+
+    return winners
+
+
+def get_spoof_info_for_message(mode):
+    number = get_statistics_number()
+    price, prizes, participants = get_spoof_info()
+    prizes = [int(i) for i in prizes.split()]
+
+    # User Interface -> Розыгрыши
+    if mode == 4:
+        return number, price, prizes[0]
+
+    else:
+        profit = 100 - sum(prizes)
+        bank = price * participants
+
+        # Admin Interface -> Розыгрыш -> Создать новый розыгрыш
+        if mode == 1:
+            pattern = '{}% от банка\n'
+            prizes_string = convert_info_to_string(pattern, [prizes])
+            return number + 1, profit, price, prizes_string
+
+        # Admin Interface -> Розыгрыш -> Текущий розыгрыш
+        elif mode == 2:
+            real_profit = bank * profit / 100
+            pattern = '{} руб ({}%)\n'
+            prizes_string = convert_info_to_string(pattern, [[int(i * bank / 100) for i in prizes], prizes])
+            return number, participants, bank, real_profit, profit, price, prizes_string
+
+        # Admin Interface -> Розыгрыш -> Завершить розыгрыш
+        elif mode == 3:
+            winners = get_winners(len(prizes))
+            pattern = '{} <a href="tg://user?id={}">{}</a> {} руб\n'
+            l = ['🥇', '🥈', '🥉', *['🎗' for _ in range(len(prizes) - 3)]]
+            winners_by_name = [get_user_first_name(i) for i in winners]
+            real_prizes = [int(i * bank / 100) for i in prizes]
+            winners_string = convert_info_to_string(pattern, [l, winners, winners_by_name, real_prizes])
+            return winners_string
+
+        else:
+            raise IndexError
+
+
+@get_number_from_message
+def get_prizes_list_from_message(text):
+    prizes = text.split()
+    if sum([int(i) for i in prizes]) > 100:
+        raise ValueError
+    else:
+        return text
