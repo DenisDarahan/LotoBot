@@ -184,6 +184,8 @@ def delete_user_qiwi_acc(user_id, qiwi_acc):
     con.commit()
     close_con(con, cur)
 
+    return result.replace(qiwi_acc + ' ', '')
+
 
 
 # ==============================================================

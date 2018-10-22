@@ -32,7 +32,8 @@ def start_user_message(message):
                                           get_variables_stage(message.chat.id) == 'user')
 def get_contacts_user_message(message):
     bot.send_message(message.chat.id,
-                     'По всем вопросам обращайтесь к администратору бота 👨‍💻 @DenisDarahan',  # TODO: change admin
+                     'По всем вопросам обращайтесь к <a href="tg://user?id=588412296">администратору</a> бота 👨‍💻',
+                     parse_mode='HTML',
                      reply_markup=start_menu())
 
 
@@ -143,8 +144,8 @@ def get_amount_to_withdraw(message):
         amount = float('{}.{}'.format(*amount))
         if real_amount < amount:
             msg = bot.send_message(message.chat.id,
-                                   'Введенная Вами сумма превышает сумму на счету...\n'
-                                   'Баланс на Вашем счету: {} руб\n'
+                                   'Введенная Вами сумма превышает сумму на счету 😢\n'
+                                   '💳 Ваш текущий баланс: {:.2f} руб\n'
                                    'Укажите, пожалуйста, сумму пополнения снова:'.format(real_amount),
                                    reply_markup=private_room_menu())
             bot.register_next_step_handler(msg, get_amount_to_withdraw)
@@ -157,8 +158,9 @@ def get_amount_to_withdraw(message):
             else:
                 msg = bot.send_message(message.chat.id,
                                        'У Вас ещё нет сохраненных кошельков 😱\n'
-                                       'Укажите, пожалуйста, номер кошелька, на который я могу отправить Ваши деньги 💸\n'
-                                       '\n<i>Будьте внимательны: вводите номер в виде +70001111111</i>',
+                                       'Укажите, пожалуйста, номер кошелька Qiwi, '
+                                       'на который я могу отправить Ваши деньги 💸\n'
+                                       '\n<i>Будьте внимательны: вводите номер в формате +70001111111</i>',
                                        parse_mode='HTML',
                                        reply_markup=private_room_menu())
                 bot.register_next_step_handler(msg, get_qiwi_acc_message, amount)
@@ -187,13 +189,24 @@ def get_qiwi_acc_message(message, amount):
 def check_save_qiwi_acc_message(call):
     answer = call.data.split('_')  # answer = [mode, 'qiwi', 'acc', amount, qiwi_acc]
     if answer[0] == 'delt':
-        delete_user_qiwi_acc(call.message.chat.id, answer[-1])
+        real_qiwi_acc = delete_user_qiwi_acc(call.message.chat.id, answer[-1])
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        bot.send_message(call.message.chat.id,
-                         'Выберите нужный кошелёк или укажите новый:',
-                         reply_markup=create_qiwi_acc_menu(float(answer[-2]), answer[-1]))
-        bot.answer_callback_query(call.id, text=None)
+        if real_qiwi_acc == ' ':
+            msg = bot.send_message(call.message.chat.id,
+                                   'У Вас ещё нет сохраненных кошельков 😱\n'
+                                   'Укажите, пожалуйста, номер кошелька Qiwi, '
+                                   'на который я могу отправить Ваши деньги 💸\n'
+                                   '\n<i>Будьте внимательны: вводите номер в формате +70001111111</i>',
+                                   parse_mode='HTML',
+                                   reply_markup=private_room_menu())
+            bot.register_next_step_handler(msg, get_qiwi_acc_message, answer[-2])
+        else:
+            bot.send_message(call.message.chat.id,
+                             'Выберите нужный кошелёк или укажите новый:',
+                             reply_markup=create_qiwi_acc_menu(float(answer[-2]), real_qiwi_acc.split()))
+            bot.answer_callback_query(call.id, text=None)
     elif answer[-1] == '+0':
+        bot.delete_message(call.message.chat.id, call.message.message_id)
         msg = bot.send_message(call.message.chat.id,
                                'Укажите, пожалуйста, номер кошелька, на который я могу отправить Ваши деньги 💸\n'
                                '\n<i>Будьте внимательны: вводите номер в виде +70001111111</i>',
