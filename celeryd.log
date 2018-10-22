@@ -1,0 +1,29 @@
+[2018-10-22 13:40:55,805: INFO/MainProcess] Connected to redis://localhost:6379//
+[2018-10-22 13:40:55,815: INFO/MainProcess] mingle: searching for neighbors
+[2018-10-22 13:40:56,835: INFO/MainProcess] mingle: all alone
+[2018-10-22 13:40:56,847: INFO/MainProcess] celery@denis-Lenovo-G500 ready.
+[2018-10-22 13:41:30,828: INFO/MainProcess] Received task: spam.send_spam[d66b218b-7dc8-4383-aa19-a231dd9f511e]  
+[2018-10-22 13:41:31,273: INFO/ForkPoolWorker-4] Task spam.send_spam[d66b218b-7dc8-4383-aa19-a231dd9f511e] succeeded in 0.4439761849998831s: None
+[2018-10-22 13:45:07,667: INFO/MainProcess] Received task: spam.send_spam[795f65ef-0133-405c-814c-b5567e12b536]  
+[2018-10-22 13:45:08,157: INFO/ForkPoolWorker-3] Task spam.send_spam[795f65ef-0133-405c-814c-b5567e12b536] succeeded in 0.48882368599970505s: None
+
+worker: Warm shutdown (MainProcess)
+ 
+ -------------- celery@denis-Lenovo-G500 v4.2.1 (windowlicker)
+---- **** ----- 
+--- * ***  * -- Linux-4.15.0-36-generic-x86_64-with-Ubuntu-18.04-bionic 2018-10-22 13:40:55
+-- * - **** --- 
+- ** ---------- [config]
+- ** ---------- .> app:         tasks:0x7f0dbe294940
+- ** ---------- .> transport:   redis://localhost:6379//
+- ** ---------- .> results:     disabled://
+- *** --- * --- .> concurrency: 4 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . spam.send_spam
+

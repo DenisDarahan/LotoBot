@@ -143,6 +143,14 @@ def create_user(user_id, first_name):
     close_con(con, cur)
 
 
+def get_user_all_users():
+    con, cur = create_con()
+    result = cur.execute('SELECT user_id FROM user').fetchall()
+    close_con(con, cur)
+
+    return result
+
+
 def get_user_first_name(user_id):
     con, cur = create_con()
     result = cur.execute('SELECT first_name FROM user WHERE user_id = ?', (user_id,)).fetchall()[0][0]

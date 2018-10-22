@@ -1,6 +1,7 @@
 from LotoBot.config import TOKEN, admin_id
 from LotoBot.markups import *
 from utils import *
+from spam import send_spam
 
 import telebot
 
@@ -258,7 +259,6 @@ def check_spoof_user_message(message):
 def get_started_spoof_user_message(call):
     price = get_spoof_price()
     amount = get_variables_amount(call.message.chat.id)
-    print(price, amount)
     if price <= amount:
         update_variables_cur_activity(call.message.chat.id, 1)
         real_amount = update_variables_amount(call.message.chat.id, -price)
@@ -393,10 +393,7 @@ def start_spoof_admin_message(message):
     bot.send_message(admin_id,
                      '⏳ Розыгрыш запущен!',
                      reply_markup=start_admin_menu())
-    # TODO: send spam
-    #bot.send_message(
-    #                 '<b>Запущен розыгрыш</b>',
-    #                 parse_mode='HTML')
+    send_spam.delay('<b>Запущен розыгрыш</b>', get_user_all_users())
 
 
 @bot.message_handler(func=lambda message: message.text == '❌ Отмена' and
@@ -425,13 +422,10 @@ def end_spoof_admin_message(message):
     bot.send_message(admin_id,
                      '⌛️ Розыгрыш завершен!',
                      reply_markup=start_admin_menu())
-    # TODO: send spam
-    bot.send_message(admin_id,
-                     '<b>Розыгрыш завершен!</b>\n\n'
+    send_spam.delay('<b>Розыгрыш завершен!</b>\n\n'
                      '🍾 Победители:\n'
                      '{}'.format(*get_spoof_info_for_message(3)),
-                     parse_mode='HTML',
-                     reply_markup=start_admin_menu())
+                    get_user_all_users())
 
 
 

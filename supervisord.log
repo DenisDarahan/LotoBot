@@ -1,0 +1,9 @@
+2018-10-22 13:40:54,231 INFO RPC interface 'supervisor' initialized
+2018-10-22 13:40:54,231 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-10-22 13:40:54,232 INFO daemonizing the supervisord process
+2018-10-22 13:40:54,232 INFO supervisord started with pid 7123
+2018-10-22 13:40:55,236 INFO spawned: 'celeryd' with pid 7124
+2018-10-22 13:40:56,817 INFO success: celeryd entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-10-22 13:48:12,422 INFO waiting for celeryd to stop
+2018-10-22 13:48:14,425 INFO waiting for celeryd to stop
+2018-10-22 13:48:14,558 INFO stopped: celeryd (exit status 0)
