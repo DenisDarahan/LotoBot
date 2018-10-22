@@ -263,6 +263,7 @@ def get_started_spoof_user_message(call):
         update_variables_cur_activity(call.message.chat.id, 1)
         real_amount = update_variables_amount(call.message.chat.id, -price)
         update_spoof_participants()
+        update_variables_activity(call.message.chat.id)
         bot.delete_message(call.message.chat.id, call.message.message_id)
         bot.send_message(call.message.chat.id,
                          'Вы учавствуете в розыгрыше! 🤑\n'

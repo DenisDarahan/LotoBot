@@ -138,6 +138,7 @@ def update_statistics_end_spoof(bank, profit):
 def create_user(user_id, first_name):
     con, cur = create_con()
     cur.execute('INSERT INTO user(user_id, first_name) VALUES (?, ?)', (user_id, first_name))
+    con.commit()
     cur.execute('INSERT INTO variables(user_id, stage) VALUES (?, ?)', (user_id, 'user'))
     con.commit()
     close_con(con, cur)

@@ -27,3 +27,28 @@ worker: Warm shutdown (MainProcess)
 [tasks]
   . spam.send_spam
 
+[2018-10-22 14:04:23,942: INFO/MainProcess] Connected to redis://localhost:6379//
+[2018-10-22 14:04:23,952: INFO/MainProcess] mingle: searching for neighbors
+[2018-10-22 14:04:24,972: INFO/MainProcess] mingle: all alone
+[2018-10-22 14:04:24,984: INFO/MainProcess] celery@denis-Lenovo-G500 ready.
+
+worker: Warm shutdown (MainProcess)
+ 
+ -------------- celery@denis-Lenovo-G500 v4.2.1 (windowlicker)
+---- **** ----- 
+--- * ***  * -- Linux-4.15.0-36-generic-x86_64-with-Ubuntu-18.04-bionic 2018-10-22 14:04:23
+-- * - **** --- 
+- ** ---------- [config]
+- ** ---------- .> app:         tasks:0x7f5883757978
+- ** ---------- .> transport:   redis://localhost:6379//
+- ** ---------- .> results:     disabled://
+- *** --- * --- .> concurrency: 4 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . spam.send_spam
+
