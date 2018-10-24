@@ -17,7 +17,7 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
 def start_user_message(message):
-    if not get_user_first_name(message.chat.id):
+    if not get_user_user_id(message.chat.id):
         create_user(message.chat.id, message.chat.first_name)
     update_variables_stage(message.chat.id, 'user')
     bot.send_message(message.chat.id,
@@ -222,7 +222,7 @@ def check_save_qiwi_acc_message(call):
         bot.delete_message(call.message.chat.id, call.message.message_id)
         if result == True:
             real_amount = update_variables_amount(call.message.chat.id, -float(answer[-2]))
-            bot.send_message(admin_id,
+            bot.send_message(admin_id[-1],
                              '<b>Вывод!</b>\n'
                              'ID: {}\n'
                              'Sum: {} руб'.format(call.message.chat.id, answer[-2]),
@@ -296,9 +296,9 @@ def get_started_spoof_user_message(call):
 # ==============================================================
 # Admin Interface
 
-@bot.message_handler(commands=['admin'], func=lambda message: message.chat.id == admin_id)
+@bot.message_handler(commands=['admin'], func=lambda message: message.chat.id in admin_id)
 def start_admin_message(message):
-    update_variables_stage(admin_id, 'admin')
+    update_variables_stage(message.chat.id, 'admin')
     bot.send_message(message.chat.id,
                      '🏛 Добро пожаловать в админ-панель',
                      reply_markup=start_admin_menu())
@@ -307,7 +307,7 @@ def start_admin_message(message):
 @bot.message_handler(func=lambda message: message.text == '↩️ Вернуться в главное меню' and
                                           get_variables_stage(message.chat.id) == 'admin')
 def get_to_main_menu_admin_message(message):
-    update_variables_stage(admin_id, 'user')
+    update_variables_stage(message.chat.id, 'user')
     bot.send_message(message.chat.id,
                      '📰 <b>Главное меню</b>',
                      parse_mode='HTML',
@@ -317,7 +317,7 @@ def get_to_main_menu_admin_message(message):
 @bot.message_handler(func=lambda message: message.text == '📊 Статистика' and
                                           get_variables_stage(message.chat.id) == 'admin')
 def get_statistics_admin_message(message):
-    bot.send_message(admin_id,
+    bot.send_message(message.chat.id,
                      '📊    <b>Статистика</b>\n\n'
                      '🎲 Всего розыгрышей: {}\n'
                      '💰 Сумма собранных банков: {} руб\n'
@@ -330,7 +330,7 @@ def get_statistics_admin_message(message):
                                           get_variables_stage(message.chat.id) == 'admin')
 def create_spoof_admin_message(message):
     if get_spoof_active():
-        bot.send_message(admin_id,
+        bot.send_message(message.chat.id,
                          '🎲🎲 <b>Розыгрыш №{}</b> 🎲🎲\n\n'
                          '👨‍👩‍👧‍👦 Количество участников: {}\n'
                          '💰 Банк: {} руб\n'
@@ -341,7 +341,7 @@ def create_spoof_admin_message(message):
                          parse_mode='HTML',
                          reply_markup=start_spoof_admin_menu())
     else:
-        msg = bot.send_message(admin_id,
+        msg = bot.send_message(message.chat.id,
                                'Укажите, пожалуйста, стоимость участия в розыгрыше:',
                                reply_markup=cancel_spoof_admin_menu())
         bot.register_next_step_handler(msg, get_price_spoof_message)
@@ -404,7 +404,7 @@ def get_prizes_spoof_message(message):
 def start_spoof_admin_message(message):
     update_spoof_active(1)
     update_statistics_number()
-    bot.send_message(admin_id,
+    bot.send_message(message.chat.id,
                      '⏳ Розыгрыш запущен!',
                      reply_markup=start_admin_menu())
     send_spam.delay('<b>Запущен розыгрыш</b>', get_user_all_users())
@@ -416,7 +416,7 @@ def cancel_spoof_admin_message(message):
     update_spoof_active(0)
     update_spoof_price(0)
     update_spoof_prizes('')
-    bot.send_message(admin_id,
+    bot.send_message(message.chat.id,
                      'Розыгрыш отменен',
                      reply_markup=start_admin_menu())
 
@@ -424,7 +424,7 @@ def cancel_spoof_admin_message(message):
 @bot.message_handler(func=lambda message: message.text == '↩️ Назад' and
                                           get_variables_stage(message.chat.id) == 'admin')
 def get_back_to_admin_message(message):
-    bot.send_message(admin_id,
+    bot.send_message(message.chat.id,
                      '🏛 <b>Админ-панель</b>',
                      parse_mode='HTML',
                      reply_markup=start_admin_menu())
@@ -433,7 +433,7 @@ def get_back_to_admin_message(message):
 @bot.message_handler(func=lambda message: message.text == '🏁 Завершить розыгрыш' and
                                           get_variables_stage(message.chat.id) == 'admin')
 def end_spoof_admin_message(message):
-    bot.send_message(admin_id,
+    bot.send_message(message.chat.id,
                      '⌛️ Розыгрыш завершен!',
                      reply_markup=start_admin_menu())
     send_spam.delay('<b>Розыгрыш завершен!</b>\n\n'

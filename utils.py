@@ -153,7 +153,7 @@ def get_spoof_info_for_message(mode):
             except:
                 clear_spoof()
                 clear_variables_cur_activity()
-                return ['Победители не определены, так как нет участников']
+                return ['Победители не определены, так как слишком мало участников']
             else:
                 pattern = '{} <a href="tg://user?id={}">{}</a> {} руб\n'
                 l = ['🥇', '🥈', '🥉', *['🎗' for _ in range(len(prizes) - 3)]]
