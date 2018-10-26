@@ -16,6 +16,13 @@ def start_menu():
     return markup
 
 
+def user_help_menu():
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton('📜 Помощь', callback_data='user_help'))
+
+    return markup
+
+
 def private_room_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row(types.KeyboardButton('📥 Пополнить счет'))
@@ -97,5 +104,13 @@ def decide_start_spoof_admin_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row(types.KeyboardButton('🚀 Начать розыгрыш'))
     markup.row(types.KeyboardButton('❌ Отмена'))
+
+    return markup
+
+
+def end_spoof_without_winners_admin_menu():
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton('✅ Да ', callback_data='end_without_winners_yes'),
+               types.InlineKeyboardButton('❎ Нет', callback_data='end_without_winners_no'))
 
     return markup

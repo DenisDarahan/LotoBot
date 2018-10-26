@@ -103,7 +103,6 @@ def convert_info_to_string(pattern, info_list):
         prizes_string = pattern.format(*[j[0] for j in info_list])
         return prizes_string
     else:
-        print(number_winners)
         for i in range(number_winners):
             prizes_string += str(i + 1) + ') ' + pattern.format(*[j[i] for j in info_list])
         return prizes_string
@@ -112,12 +111,15 @@ def convert_info_to_string(pattern, info_list):
 def get_winners(number_winners):
     winners = []
     possible_winners = [i[0] for i in get_variables_users_by_cur_activity(1)]
-    for i in range(number_winners):
+    n = len(possible_winners)
+    if number_winners <= n:
+        n = number_winners
+    for i in range(n):
         winner = choice(possible_winners)
         winners.append(winner)
         possible_winners.remove(winner)
 
-    return winners
+    return winners, n
 
 
 def get_spoof_info_for_message(mode):
@@ -148,20 +150,16 @@ def get_spoof_info_for_message(mode):
 
         # Admin Interface -> Розыгрыш -> Завершить розыгрыш
         elif mode == 3:
-            try:
-                winners = get_winners(len(prizes))
-            except:
-                clear_spoof()
-                clear_variables_cur_activity()
-                return ['Победители не определены, так как слишком мало участников']
-            else:
-                pattern = '{} <a href="tg://user?id={}">{}</a> {} руб\n'
-                l = ['🥇', '🥈', '🥉', *['🎗' for _ in range(len(prizes) - 3)]]
-                winners_by_name = [get_user_first_name(i) for i in winners]
-                real_prizes = [int(i * bank / 100) for i in prizes]
-                winners_string = convert_info_to_string(pattern, [l, winners, winners_by_name, real_prizes])
-                end_spoof(winners, real_prizes, bank, profit)
-                return [winners_string]
+            winners, n = get_winners(len(prizes))
+            if n == 0:
+                return ['Победители не могут быть определены, так как нет участников']
+            pattern = '{} <a href="tg://user?id={}">{}</a> {} руб\n'
+            l = ['🥇', '🥈', '🥉', *['🎗' for _ in range(len(prizes) - 3)]]
+            winners_by_name = [get_user_first_name(i) for i in winners]
+            real_prizes = [int(i * bank / 100) for i in prizes[:n]]
+            winners_string = convert_info_to_string(pattern, [l, winners, winners_by_name, real_prizes])
+            end_spoof(winners, real_prizes, bank, profit)
+            return [winners_string]
         else:
             raise IndexError
 

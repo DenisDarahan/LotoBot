@@ -26,6 +26,22 @@ def start_user_message(message):
                      'Вы же участвовали когда-нибудь в лотерее? 🤔\n'
                      'Здесь действуют те же правила: возьмите билет 📇 и выиграйте миллион 💸 (а может даже больше 💸💸💸)',
                      reply_markup=start_menu())
+    bot.send_message(message.chat.id,
+                     'И так, с чего же начать? 🤔\n'
+                     'Для участия в текущем розыгрыше нужен билет 📇\n'
+                     'Чтобы взять билет, нажмите 🎲 Розыгрыши',
+                     reply_markup=user_help_menu())
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'user_help')
+def user_help_message(call):
+    bot.send_message(call.message.chat.id,
+                     '🏡 <b>Личный кабинет</b> - выводите выигранные деньги 💵 на свой аккаунт Qiwi\n'
+                     '🎲 <b>Розыгрыши</b> - хватайте свой выигрышный билет 📇 и заберите приз!\n'
+                     '📞 <b>Контакты</b> - для связи с администратором 👨‍💻',
+                     parse_mode='HTML',
+                     reply_markup=start_menu())
+    bot.answer_callback_query(call.id, text=None)
 
 
 @bot.message_handler(func=lambda message: message.text == '📞 Контакты' and
@@ -42,7 +58,7 @@ def get_contacts_user_message(message):
 def get_private_room_user_message(message):
     bot.send_message(message.chat.id,
                      '🏡   <b>Личный кабинет</b>   🏡\n\n'
-                     '💳 Ваш текущий баланс: {} руб\n'
+                     '💳 Ваш текущий баланс: {:.2f} руб\n'
                      '🎲 Участий в розыгрышах: {} раз(а)'
                      ''.format(*get_variables_private_room_info(message.chat.id)),
                      parse_mode='HTML',
@@ -264,7 +280,8 @@ def check_spoof_user_message(message):
                          reply_markup=start_menu())
     else:
         bot.send_message(message.chat.id,
-                         'К сожалению, на данный момент активных розыгрышей нет 😢',
+                         'К сожалению, на данный момент активных розыгрышей нет 😢\n'
+                         'Как только появится розыгрыш, Вы тут же получете уведомление 📬',
                          reply_markup=start_menu())
 
 
@@ -300,7 +317,9 @@ def get_started_spoof_user_message(call):
 def start_admin_message(message):
     update_variables_stage(message.chat.id, 'admin')
     bot.send_message(message.chat.id,
-                     '🏛 Добро пожаловать в админ-панель',
+                     '🏛 Добро пожаловать в админ-панель\n'
+                     'Чтобы начать работу, нажмите 🎲 <b>Розыгрыш</b>',
+                     parse_mode='HTML',
                      reply_markup=start_admin_menu())
 
 
@@ -331,6 +350,7 @@ def get_statistics_admin_message(message):
 def create_spoof_admin_message(message):
     if get_spoof_active():
         bot.send_message(message.chat.id,
+                         'Информация о текущем розыгрыше:\n\n'
                          '🎲🎲 <b>Розыгрыш №{}</b> 🎲🎲\n\n'
                          '👨‍👩‍👧‍👦 Количество участников: {}\n'
                          '💰 Банк: {} руб\n'
@@ -342,6 +362,7 @@ def create_spoof_admin_message(message):
                          reply_markup=start_spoof_admin_menu())
     else:
         msg = bot.send_message(message.chat.id,
+                               'И так, начнем создание нового розыгрыша!\n'
                                'Укажите, пожалуйста, стоимость участия в розыгрыше:',
                                reply_markup=cancel_spoof_admin_menu())
         bot.register_next_step_handler(msg, get_price_spoof_message)
@@ -405,7 +426,8 @@ def start_spoof_admin_message(message):
     update_spoof_active(1)
     update_statistics_number()
     bot.send_message(message.chat.id,
-                     '⏳ Розыгрыш запущен!',
+                     '⏳ Розыгрыш запущен!\n'
+                     'Для участия в розыгрыше необходимо нажать 🎲 Розыгрыши в 📰 Главном меню',
                      reply_markup=start_admin_menu())
     send_spam.delay('<b>Запущен розыгрыш</b>', get_user_all_users())
 
@@ -433,14 +455,33 @@ def get_back_to_admin_message(message):
 @bot.message_handler(func=lambda message: message.text == '🏁 Завершить розыгрыш' and
                                           get_variables_stage(message.chat.id) == 'admin')
 def end_spoof_admin_message(message):
-    bot.send_message(message.chat.id,
-                     '⌛️ Розыгрыш завершен!',
-                     reply_markup=start_admin_menu())
-    send_spam.delay('<b>Розыгрыш завершен!</b>\n\n'
-                     '🍾 Победители:\n'
-                     '{}'.format(*get_spoof_info_for_message(3)),
-                    get_user_all_users())
+    spoof_result = get_spoof_info_for_message(3)
+    if spoof_result == ['Победители не могут быть определены, так как нет участников']:
+        bot.send_message(message.chat.id,
+                         spoof_result[0] + '\nЗавершить розыгрыш без призов?',
+                         reply_markup=end_spoof_without_winners_admin_menu())
+    else:
+        bot.send_message(message.chat.id,
+                         '⌛️ Розыгрыш завершен!',
+                         reply_markup=start_admin_menu())
+        send_spam.delay('<b>Розыгрыш завершен!</b>\n\n'
+                         '🍾 Победители:\n'
+                         '{}'.format(*get_spoof_info_for_message(3)),
+                        get_user_all_users())
 
+
+@bot.callback_query_handler(func=lambda call: call.data[:20] == 'end_without_winners_')
+def get_started_spoof_user_message(call):
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    if call.data[20:] == 'yes':
+        bot.send_message(call.message.chat.id,
+                         '⌛️ Розыгрыш завершен!',
+                         reply_markup=start_admin_menu())
+        clear_spoof()
+        clear_variables_cur_activity()
+        bot.answer_callback_query(call.id, text='Розыгрыш завершен')
+    else:
+        bot.answer_callback_query(call.id, text='Розыгрыш продолжается')
 
 
 
