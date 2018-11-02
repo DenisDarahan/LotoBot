@@ -15,7 +15,7 @@ def get_number_from_message(func):
         try:
             result = func(text)
         except:
-            if text in ['↩️ Назад', '❌ Отмена']:
+            if text in ['↩️ Назад', '❌ Отмена', '📥 Пополнить счет', '📤 Вывод средств']:
                 result = 'exit'
             else:
                 result = 'not a number'

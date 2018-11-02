@@ -96,6 +96,12 @@ def get_amount_to_raise(message):
                                'Укажите, пожалуйста, сумму пополнения снова:',
                                reply_markup=private_room_menu())
         bot.register_next_step_handler(msg, get_amount_to_raise)
+    elif float('{}.{}'.format(*result)) < 1:
+        msg = bot.send_message(message.chat.id,
+                               'Минимальная сумма транзакции - 1 рубль!\n'
+                               'Укажите, пожалуйста, сумму пополнения снова:',
+                               reply_markup=private_room_menu())
+        bot.register_next_step_handler(msg, get_amount_to_raise)
     else:
         msg = bot.send_message(message.chat.id,
                                'Принято!\n'
@@ -152,7 +158,13 @@ def get_amount_to_withdraw(message):
     elif amount == 'not a number':
         msg = bot.send_message(message.chat.id,
                                'Кажется, Вы ввели не число...\n'
-                               'Укажите, пожалуйста, сумму пополнения снова:',
+                               'Укажите, пожалуйста, сумму вывода снова:',
+                               reply_markup=private_room_menu())
+        bot.register_next_step_handler(msg, get_amount_to_withdraw)
+    elif float('{}.{}'.format(*amount)) < 1:
+        msg = bot.send_message(message.chat.id,
+                               'Минимальная сумма транзакции - 1 рубль!\n'
+                               'Укажите, пожалуйста, сумму вывода снова:',
                                reply_markup=private_room_menu())
         bot.register_next_step_handler(msg, get_amount_to_withdraw)
     else:
@@ -162,7 +174,7 @@ def get_amount_to_withdraw(message):
             msg = bot.send_message(message.chat.id,
                                    'Введенная Вами сумма превышает сумму на счету 😢\n'
                                    '💳 Ваш текущий баланс: {:.2f} руб\n'
-                                   'Укажите, пожалуйста, сумму пополнения снова:'.format(real_amount),
+                                   'Укажите, пожалуйста, сумму вывода снова:'.format(real_amount),
                                    reply_markup=private_room_menu())
             bot.register_next_step_handler(msg, get_amount_to_withdraw)
         else:
@@ -241,13 +253,13 @@ def check_save_qiwi_acc_message(call):
             bot.send_message(admin_id[-1],
                              '<b>Вывод!</b>\n'
                              'ID: {}\n'
-                             'Sum: {} руб'.format(call.message.chat.id, answer[-2]),
+                             'Sum: {:.2f} руб'.format(call.message.chat.id, answer[-2]),
                              parse_mode='HTML')
             bot.send_message(call.message.chat.id,
                              'Готово!\n'
                              'Деньги были перечислены на Ваш кошелёк!😍💰\n\n'
-                             '✅ Перечислено: {} руб\n'
-                             '💳 Ваш текущий баланс: {} руб'.format(answer[-2], real_amount),
+                             '✅ Перечислено: {:.2f} руб\n'
+                             '💳 Ваш текущий баланс: {:.2f} руб'.format(answer[-2], real_amount),
                              reply_markup=private_room_menu())
             bot.answer_callback_query(call.id, text='Успех!')
         elif result == None:
@@ -304,7 +316,8 @@ def get_started_spoof_user_message(call):
     else:
         bot.send_message(call.message.chat.id,
                          'К сожалению, на Вашем счету не достаточно средств 😢\n'
-                         'Вы можете пополнить счет в 🏡 Личном кабинете',
+                         'Вы можете пополнить счет в 🏡 <b>Личном кабинете</b>',
+                         parse_mode='HTML',
                          reply_markup=start_menu())
         bot.answer_callback_query(call.id, text='Недостаточно средств на счету')
 
@@ -465,8 +478,8 @@ def end_spoof_admin_message(message):
                          '⌛️ Розыгрыш завершен!',
                          reply_markup=start_admin_menu())
         send_spam.delay('<b>Розыгрыш завершен!</b>\n\n'
-                         '🍾 Победители:\n'
-                         '{}'.format(*get_spoof_info_for_message(3)),
+                        '🍾 Победители:\n'
+                        '{}'.format(*spoof_result),
                         get_user_all_users())
 
 
